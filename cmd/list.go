@@ -14,9 +14,10 @@ import (
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List sessions stored in your bitwarden vault",
-	Long:  `List Cumulocity IoT sessions from your bitwarden vault`,
+	Use:          "list",
+	Short:        "List sessions stored in your bitwarden vault",
+	Long:         `List Cumulocity IoT sessions from your bitwarden vault`,
+	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		folder, err := cmd.Flags().GetString("folder")
 		if err != nil {
