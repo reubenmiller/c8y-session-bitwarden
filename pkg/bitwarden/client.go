@@ -77,7 +77,7 @@ type BWUri struct {
 
 func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySession {
 
-	session := &session.CumulocitySession{
+	out := &session.CumulocitySession{
 		SessionURI: fmt.Sprintf("bitwarden://%s", item.ID),
 		Name:       item.Name,
 		Username:   item.Login.Username,
@@ -88,18 +88,24 @@ func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySe
 
 	// Include folder name (for humans)
 	if folderName, found := folders[item.FolderID]; found {
-		session.FolderName = folderName
+		out.FolderName = folderName
 	}
 
 	if len(item.Login.Uris) > 0 {
-		session.Host = item.Login.Uris[0].URI
+		out.Host = item.Login.Uris[0].URI
 	}
 
 	if len(item.Fields) > 0 {
 		for _, field := range item.Fields {
 			if strings.HasPrefix(strings.ToLower(field.Name), "tenant") {
-				session.Tenant = field.Value
-				break
+				out.Tenant = field.Value
+			}
+			if strings.EqualFold(field.Name, "type") {
+				v, typeErr := session.MarshalSessionType(field.Value)
+				if typeErr != nil {
+					slog.Error("Unknown session type, so using default instead.", "got", field.Value, "default", v)
+				}
+				out.Type = v
 			}
 		}
 	}
@@ -107,13 +113,14 @@ func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySe
 	if strings.Contains(item.Login.Username, "/") {
 		parts := strings.SplitN(item.Login.Username, "/", 2)
 		if len(parts) == 2 {
-			if session.Tenant != "" {
-				session.Tenant = parts[0]
+			if out.Tenant != "" {
+				out.Tenant = parts[0]
 			}
-			session.Username = parts[1]
+			out.Username = parts[1]
 		}
 	}
-	return session
+
+	return out
 }
 
 func isUID(v string) bool {

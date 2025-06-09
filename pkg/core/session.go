@@ -5,6 +5,23 @@ import (
 	"strings"
 )
 
+var TypeDev = "dev"
+var TypeQual = "qual"
+var TypeProduction = "prod"
+
+func MarshalSessionType(v string) (string, error) {
+	switch v {
+	case "dev":
+		return TypeDev, nil
+	case "qual", "test":
+		return TypeQual, nil
+	case "prod", "production":
+		return TypeProduction, nil
+	default:
+		return TypeProduction, fmt.Errorf("unknown session type: %s", v)
+	}
+}
+
 type CumulocitySession struct {
 	SessionURI string `json:"sessionUri,omitempty"`
 	Name       string `json:"name,omitempty"`
@@ -14,6 +31,7 @@ type CumulocitySession struct {
 	Tenant     string `json:"tenant,omitempty"`
 	TOTP       string `json:"totp,omitempty"`
 	TOTPSecret string `json:"totpSecret,omitempty"`
+	Type       string `json:"type,omitempty"`
 
 	// Bitwarden specific
 	FolderID   string `json:"folderId,omitempty"`
@@ -41,6 +59,11 @@ func (i CumulocitySession) Description() string {
 	if i.FolderName != "" {
 		fields = append(fields, ", Folder=%s")
 		args = append(args, i.FolderName)
+	}
+
+	if i.Type != "" {
+		fields = append(fields, ", type=%s")
+		args = append(args, i.Type)
 	}
 
 	fields = append(fields, " | uri=%s")
