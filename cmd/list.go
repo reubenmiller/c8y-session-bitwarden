@@ -25,6 +25,9 @@ var listCmd = &cobra.Command{
 		}
 		client := bitwarden.NewClient(folder)
 		sessions, err := client.List()
+		if err != nil {
+			return err
+		}
 
 		session, err := picker.Pick(sessions)
 		if err != nil {

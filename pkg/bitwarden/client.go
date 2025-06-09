@@ -151,6 +151,9 @@ func (c *Client) ListFolders(name ...string) (map[string]string, error) {
 func (c *Client) exec(args []string, data any) error {
 	bw := exec.Command("bw", args...)
 	stdout, err := bw.StdoutPipe()
+	if err != nil {
+		return err
+	}
 	err = bw.Start()
 	if err != nil {
 		return err
