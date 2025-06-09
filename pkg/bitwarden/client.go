@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/cli/safeexec"
 	"github.com/pquerna/otp/totp"
 	session "github.com/reubenmiller/c8y-session-bitwarden/pkg/core"
 )
@@ -156,6 +158,14 @@ func (c *Client) ListFolders(name ...string) (map[string]string, error) {
 }
 
 func (c *Client) exec(args []string, data any) error {
+	if _, err := safeexec.LookPath("bw"); err != nil {
+		return err
+	}
+
+	if v := os.Getenv("BW_SESSION"); v == "" {
+		return fmt.Errorf("bitwarden cli 'BW_SESSION' env variable is not set")
+	}
+
 	bw := exec.Command("bw", args...)
 	stdout, err := bw.StdoutPipe()
 	if err != nil {
@@ -166,6 +176,9 @@ func (c *Client) exec(args []string, data any) error {
 		return err
 	}
 	parseErr := json.NewDecoder(stdout).Decode(data)
+	if parseErr != nil {
+		parseErr = fmt.Errorf("failed to parse json output. %w", parseErr)
+	}
 
 	// wait for command to finish in background
 	go bw.Wait()
