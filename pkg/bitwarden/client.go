@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/cli/safeexec"
 	"github.com/pquerna/otp/totp"
 	session "github.com/reubenmiller/c8y-session-bitwarden/pkg/core"
 )
@@ -75,18 +73,6 @@ func (b *BWLogin) MatchesUri(search string) bool {
 // BWUri bitwarden URI associated with the login credentials
 type BWUri struct {
 	URI string `json:"uri"`
-}
-
-func checkBitwarden() error {
-	if os.Getenv("BW_SESSION") == "" {
-		return fmt.Errorf("bitwarden env variable not set. Expected BW_SESSION to be defined and not empty")
-	}
-
-	if _, err := safeexec.LookPath("bw"); err != nil {
-		return fmt.Errorf("could not find 'bw' (bitwarden-cli). Check if it is installed on your machine")
-	}
-
-	return nil
 }
 
 func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySession {
@@ -164,7 +150,6 @@ func (c *Client) ListFolders(name ...string) (map[string]string, error) {
 
 func (c *Client) exec(args []string, data any) error {
 	bw := exec.Command("bw", args...)
-	// bw.Env = os.Environ()
 	stdout, err := bw.StdoutPipe()
 	err = bw.Start()
 	if err != nil {
@@ -192,12 +177,10 @@ func (c *Client) List(name ...string) ([]*session.CumulocitySession, error) {
 			cmdArgs = append(cmdArgs, "--folderid", c.Folder)
 		} else {
 			// Filter by folder name/pattern (additional lookup required)
-			// fmt.Printf("Looking up folder by name: %s\n", c.Folder)
 			folders, folderErr = c.ListFolders(c.Folder)
 			if folderErr != nil {
 				return nil, folderErr
 			}
-			// fmt.Printf("Matching folders: %d\n", len(folders))
 		}
 	}
 
@@ -220,15 +203,6 @@ func (c *Client) List(name ...string) ([]*session.CumulocitySession, error) {
 
 		sessions = append(sessions, mapToSession(&item, folders))
 	}
-
-	// out, outErr := json.MarshalIndent(sessions, "", " ")
-	// if outErr != nil {
-	// 	return nil, outErr
-	// }
-	// fmt.Printf("Output: %v\n%s\nlen=%d (raw len=%d)\n", time.Now().Format(time.RFC3339Nano), out, len(sessions), len(items))
-
-	// fmt.Printf("Finished: %v\n", time.Now().Format(time.RFC3339Nano))
-	// fmt.Printf("Cmd Done: %v\n", time.Now().Format(time.RFC3339Nano))
 	return sessions, nil
 }
 
