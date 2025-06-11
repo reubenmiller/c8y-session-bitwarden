@@ -102,7 +102,7 @@ func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySe
 			if strings.HasPrefix(strings.ToLower(field.Name), "tenant") {
 				out.Tenant = field.Value
 			}
-			if strings.EqualFold(field.Name, "type") {
+			if strings.EqualFold(field.Name, "mode") {
 				v, typeErr := session.MarshalSessionType(field.Value)
 				if typeErr != nil {
 					slog.Error("Unknown session type, so using default instead.", "got", field.Value, "default", v)
