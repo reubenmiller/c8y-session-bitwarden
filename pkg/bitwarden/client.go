@@ -107,7 +107,7 @@ func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySe
 				if typeErr != nil {
 					slog.Error("Unknown session type, so using default instead.", "got", field.Value, "default", v)
 				}
-				out.Type = v
+				out.Mode = v
 			}
 		}
 	}

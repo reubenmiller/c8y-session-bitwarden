@@ -31,7 +31,7 @@ type CumulocitySession struct {
 	Tenant     string `json:"tenant,omitempty"`
 	TOTP       string `json:"totp,omitempty"`
 	TOTPSecret string `json:"totpSecret,omitempty"`
-	Type       string `json:"type,omitempty"`
+	Mode       string `json:"mode,omitempty"`
 
 	// Bitwarden specific
 	FolderID   string `json:"folderId,omitempty"`
@@ -61,9 +61,9 @@ func (i CumulocitySession) Description() string {
 		args = append(args, i.FolderName)
 	}
 
-	if i.Type != "" {
-		fields = append(fields, ", type=%s")
-		args = append(args, i.Type)
+	if i.Mode != "" {
+		fields = append(fields, ", mode=%s")
+		args = append(args, i.Mode)
 	}
 
 	fields = append(fields, " | uri=%s")

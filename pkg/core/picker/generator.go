@@ -35,7 +35,7 @@ func (r *randomItemGenerator) Next() *core.CumulocitySession {
 		Username:   r.sessions[r.index].Username,
 		FolderID:   r.sessions[r.index].FolderID,
 		FolderName: r.sessions[r.index].FolderName,
-		Type:       r.sessions[r.index].Type,
+		Mode:       r.sessions[r.index].Mode,
 	}
 
 	r.index++
