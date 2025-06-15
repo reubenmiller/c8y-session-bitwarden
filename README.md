@@ -44,21 +44,20 @@ go install github.com/reubenmiller/c8y-session-bitwarden@latest
 
 ## Using it with go-c8y-cli
 
-**Note**: A tighter integration is being investigated, so expect the interface to change.
+**Note**: You need to install go-c8y-cli >= [2.52.0](https://github.com/reubenmiller/go-c8y-cli/releases/tag/v2.52.0) to use these instructions
 
 1. In your shell profile, e.g. `~/.zshrc`, then create the following shell function which you can use to use the bitwarden login.
+
     ```sh
-    set-session-bitwarden() {
-        clear_var=0
-        if [ -z "$BW_SESSION" ]; then
-            export BW_SESSION="$(touchie get BW_SESSION)"
-            clear_var=1
-        fi
-        eval "$( c8y sessions login --from-cmd "c8y-session-bitwarden list --folder c8y" --format json )"
-        if [ "$clear_var" = "1" ]; then
-            unset BW_SESSION
-        fi
-    }
+    eval "$(c8y settings update --shell zsh session.provider.type external )"
+    eval "$(c8y settings update --shell zsh session.provider.command "c8y-session-bitwarden list --folder c8y")"
+    eval "$(c8y settings update --shell zsh session.provider.secrets BW_SESSION)"
+    ```
+
+    If you're using touchie, then you can set the pin-entry setting to use touchie to get the BW_SESSION value from the macOS keychain and authenticate using TouchID
+
+    ```sh
+    eval "$(c8y settings update pinEntry "touchie get" --shell auto)"
     ```
 
 2. Reload your shell
@@ -66,5 +65,5 @@ go install github.com/reubenmiller/c8y-session-bitwarden@latest
 3. Activate the session
 
     ```sh
-    set-session-bitwarden
+    set-session
     ```
