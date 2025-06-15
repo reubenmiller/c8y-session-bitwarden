@@ -48,6 +48,8 @@ go install github.com/reubenmiller/c8y-session-bitwarden@latest
 
 1. In your shell profile, e.g. `~/.zshrc`, then create the following shell function which you can use to use the bitwarden login.
 
+    **Option 1: Change the set-session**
+
     ```sh
     eval "$(c8y settings update --shell zsh session.provider.type external )"
     eval "$(c8y settings update --shell zsh session.provider.command "c8y-session-bitwarden list --folder c8y")"
@@ -59,6 +61,15 @@ go install github.com/reubenmiller/c8y-session-bitwarden@latest
     ```sh
     eval "$(c8y settings update pinEntry "touchie get" --shell auto)"
     ```
+
+    **Option 2: Add a new set-session helper**
+
+    ```sh
+    eval "$(c8y settings update pinEntry "touchie get" --shell auto)"
+    set-session-bitwarden() {
+        eval "$(c8y sessions login --from-cmd "c8y-session-bitwarden list --folder c8y" --secrets BW_SESSION)"
+    }
+```
 
 2. Reload your shell
 
