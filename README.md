@@ -67,7 +67,7 @@ go install github.com/reubenmiller/c8y-session-bitwarden@latest
     ```sh
     eval "$(c8y settings update pinEntry "touchie get" --shell auto)"
     set-session-bitwarden() {
-        eval "$(c8y sessions login --from-cmd "c8y-session-bitwarden list --folder c8y" --secrets BW_SESSION)"
+        eval "$(c8y sessions login --from-cmd "c8y-session-bitwarden list --folder c8y" --secrets BW_SESSION "$@")"
     }
 ```
 
