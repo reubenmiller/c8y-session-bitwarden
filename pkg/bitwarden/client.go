@@ -25,6 +25,15 @@ func NewClient(folder string) *Client {
 	}
 }
 
+func GetField(fields []BWField, name string) (string, bool) {
+	for _, field := range fields {
+		if strings.EqualFold(field.Name, name) {
+			return field.Value, true
+		}
+	}
+	return "", false
+}
+
 // BWItem bitwarden item containing the login information
 type BWItem struct {
 	ID       string    `json:"id"`
@@ -98,17 +107,20 @@ func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySe
 	}
 
 	if len(item.Fields) > 0 {
-		for _, field := range item.Fields {
-			if strings.HasPrefix(strings.ToLower(field.Name), "tenant") {
-				out.Tenant = field.Value
+		if v, found := GetField(item.Fields, "tenant"); found {
+			out.Tenant = v
+		}
+
+		if v, found := GetField(item.Fields, "mode"); found {
+			modeValue, typeErr := session.MarshalSessionType(v)
+			if typeErr != nil {
+				slog.Error("Unknown session type, so using default instead.", "got", v, "default", modeValue)
 			}
-			if strings.EqualFold(field.Name, "mode") {
-				v, typeErr := session.MarshalSessionType(field.Value)
-				if typeErr != nil {
-					slog.Error("Unknown session type, so using default instead.", "got", field.Value, "default", v)
-				}
-				out.Mode = v
-			}
+			out.Mode = modeValue
+		}
+
+		if v, found := GetField(item.Fields, "loginType"); found {
+			out.LoginType = v
 		}
 	}
 

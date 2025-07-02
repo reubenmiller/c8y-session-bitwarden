@@ -32,6 +32,7 @@ type CumulocitySession struct {
 	TOTP       string `json:"totp,omitempty"`
 	TOTPSecret string `json:"totpSecret,omitempty"`
 	Mode       string `json:"mode,omitempty"`
+	LoginType  string `json:"loginType,omitempty"`
 
 	// Bitwarden specific
 	FolderID   string `json:"folderId,omitempty"`
