@@ -14,6 +14,7 @@ var rootCmd = &cobra.Command{
 	Use:   "c8y-session-bitwarden",
 	Short: "go-c8y-cli bitwarden session selector",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		slog.SetLogLoggerLevel(slog.LevelWarn)
 		if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
 			slog.SetLogLoggerLevel(slog.LevelInfo)
 		}
