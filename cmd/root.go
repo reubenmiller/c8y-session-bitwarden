@@ -32,3 +32,7 @@ func Execute() {
 		os.Exit(1)
 	}
 }
+
+func init() {
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose logging")
+}
