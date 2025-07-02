@@ -43,16 +43,6 @@ type BWItem struct {
 	FolderID string    `json:"folderId"`
 }
 
-func (bwi *BWItem) HasTenantField() bool {
-	for _, field := range bwi.Fields {
-		name := strings.ToLower(field.Name)
-		if strings.Contains(name, "tenant") && strings.TrimSpace(field.Value) != "" {
-			return true
-		}
-	}
-	return false
-}
-
 func (bwi *BWItem) Skip() bool {
 	return len(bwi.Login.Uris) == 0
 }
