@@ -82,6 +82,10 @@ var listCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(listCmd)
 	listCmd.Flags().String("folder", "c8y", "Folder")
+
+	// Hidden flags which are only there to satisfy the go-c8y-cli session interface
 	listCmd.Flags().String("loginType", "", "Not used. Kept to satisfy the go-c8y-cli session interface")
 	listCmd.Flags().Bool("clear", false, "Not used. Kept to satisfy the go-c8y-cli session interface")
+	listCmd.Flags().MarkHidden("loginType")
+	listCmd.Flags().MarkHidden("clear")
 }
