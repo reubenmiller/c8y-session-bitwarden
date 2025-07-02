@@ -212,6 +212,13 @@ func (c *Client) List(name ...string) ([]*session.CumulocitySession, error) {
 		}
 	}
 
+	// TODO: Make it configurable if the bw filtering should be used or not
+	if len(name) > 0 {
+		// Only add first search terms the bw cli command only supports one,
+		// the remaining of the searching will be done client side
+		cmdArgs = append(cmdArgs, "--search", name[0])
+	}
+
 	slog.Debug("Starting", "time", time.Now().Format(time.RFC3339Nano))
 
 	items := make([]BWItem, 0)
@@ -229,7 +236,12 @@ func (c *Client) List(name ...string) ([]*session.CumulocitySession, error) {
 			}
 		}
 
-		sessions = append(sessions, mapToSession(&item, folders))
+		currentSession := mapToSession(&item, folders)
+
+		// apply client side filtering
+		if session.MatchSession(currentSession, name...) {
+			sessions = append(sessions, currentSession)
+		}
 	}
 	return sessions, nil
 }

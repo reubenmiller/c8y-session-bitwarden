@@ -54,6 +54,29 @@ func CloneSession(s *CumulocitySession) *CumulocitySession {
 	}
 }
 
+// MatchSession checks if the session matches a list of search terms
+func MatchSession(s *CumulocitySession, searchTerms ...string) bool {
+	matches := 0
+	for _, term := range searchTerms {
+		if strings.Contains(s.Username, term) {
+			matches++
+		} else if strings.Contains(s.Host, term) {
+			matches++
+		} else if strings.Contains(s.Name, term) {
+			matches++
+		} else if strings.Contains(s.Description(), term) {
+			matches++
+		} else if strings.Contains(s.SessionURI, term) {
+			matches++
+		} else if strings.Contains(s.Tenant, term) {
+			matches++
+		} else if strings.Contains(s.Mode, term) {
+			matches++
+		}
+	}
+	return len(searchTerms) == matches
+}
+
 func (i CumulocitySession) FilterValue() string {
 	return strings.Join([]string{i.SessionURI, i.Host, i.Username}, " ")
 }

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/reubenmiller/c8y-session-bitwarden/pkg/bitwarden"
 	"github.com/reubenmiller/c8y-session-bitwarden/pkg/core/picker"
 	"github.com/spf13/cobra"
@@ -14,9 +15,28 @@ import (
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
-	Use:          "list",
-	Short:        "List sessions stored in your bitwarden vault",
-	Long:         `List Cumulocity IoT sessions from your bitwarden vault`,
+	Use:   "list [SEARCH_TERMS]",
+	Short: "List sessions stored in your bitwarden vault",
+	Long: heredoc.Doc(`
+		List Cumulocity IoT sessions from your bitwarden vault
+
+		Notes:
+			* the first SEARCH_TERM is used sent to the bw cli command as the '--search <term>'
+			  argument, and then a client-side filter is used to apply the additional terms. This is
+			  due to the limitation that the bw commands only supports one search term
+
+			* If only 1 match if found, then the session will be selected automatically
+
+		Examples
+			c8y-session-bitwarden list --folder c8y
+			# Select items from the c8y folder
+
+			c8y-session-bitwarden list --folder c8y example.com
+			# Select items from the c8y folder, and match the search term, "example.com"
+
+			c8y-session-bitwarden list --folder c8y example.com dev
+			# Select items from the c8y folder, and match the search term, "example.com" AND "dev"
+	`),
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		folder, err := cmd.Flags().GetString("folder")
@@ -24,12 +44,14 @@ var listCmd = &cobra.Command{
 			return err
 		}
 		client := bitwarden.NewClient(folder)
-		sessions, err := client.List()
+		sessions, err := client.List(args...)
 		if err != nil {
 			return err
 		}
 
-		session, err := picker.Pick(sessions)
+		session, err := picker.Pick(sessions, picker.PickerOptions{
+			AutoSelectIfOnlyOne: true,
+		})
 		if err != nil {
 			return err
 		}

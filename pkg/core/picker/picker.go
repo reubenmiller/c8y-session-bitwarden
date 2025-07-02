@@ -196,7 +196,16 @@ func (m model) View() string {
 	return appStyle.Render(m.list.View())
 }
 
-func Pick(sessions []*core.CumulocitySession) (*core.CumulocitySession, error) {
+type PickerOptions struct {
+	// AutoSelectIfOnlyOne if enabled will automatically select a session if there is only one session in the list (without requiring users approval)
+	AutoSelectIfOnlyOne bool
+}
+
+func Pick(sessions []*core.CumulocitySession, options PickerOptions) (*core.CumulocitySession, error) {
+
+	if options.AutoSelectIfOnlyOne && len(sessions) == 1 {
+		return sessions[0], nil
+	}
 
 	itemGenerator := randomItemGenerator{
 		sessions: sessions,
