@@ -28,15 +28,7 @@ func (r *randomItemGenerator) Next() *core.CumulocitySession {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
-	i := &core.CumulocitySession{
-		SessionURI: r.sessions[r.index].SessionURI,
-		Host:       r.sessions[r.index].Host,
-		Tenant:     r.sessions[r.index].Tenant,
-		Username:   r.sessions[r.index].Username,
-		FolderID:   r.sessions[r.index].FolderID,
-		FolderName: r.sessions[r.index].FolderName,
-		Mode:       r.sessions[r.index].Mode,
-	}
+	i := core.CloneSession(r.sessions[r.index])
 
 	r.index++
 	if r.index >= len(r.sessions) {

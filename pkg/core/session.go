@@ -39,6 +39,21 @@ type CumulocitySession struct {
 	FolderName string `json:"folderName,omitempty"`
 }
 
+// CloneSession only returns the subset of session details which are to be passed back to the caller
+func CloneSession(s *CumulocitySession) *CumulocitySession {
+	return &CumulocitySession{
+		SessionURI: s.SessionURI,
+		Name:       s.Name,
+		Host:       s.Host,
+		Tenant:     s.Tenant,
+		Username:   s.Username,
+		FolderID:   s.FolderID,
+		FolderName: s.FolderName,
+		Mode:       s.Mode,
+		LoginType:  s.LoginType,
+	}
+}
+
 func (i CumulocitySession) FilterValue() string {
 	return strings.Join([]string{i.SessionURI, i.Host, i.Username}, " ")
 }
