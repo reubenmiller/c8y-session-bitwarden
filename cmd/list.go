@@ -6,6 +6,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
 	"github.com/reubenmiller/c8y-session-bitwarden/pkg/bitwarden"
 	"github.com/reubenmiller/c8y-session-bitwarden/pkg/core/picker"
@@ -47,6 +48,17 @@ var listCmd = &cobra.Command{
 				}
 			}
 		}
+
+		slog.Info("Selected session", "session", session)
+
+		// Allow users to manually set the login type
+		// loginType, err := cmd.Flags().GetString("loginType")
+		// if err != nil {
+		// 	return err
+		// }
+		// if loginType != "" {
+		// 	session.LoginType = loginType
+		// }
 
 		out, err := json.MarshalIndent(session, "", "  ")
 		if err != nil {

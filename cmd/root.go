@@ -4,6 +4,7 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -12,6 +13,11 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "c8y-session-bitwarden",
 	Short: "go-c8y-cli bitwarden session selector",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
+			slog.SetLogLoggerLevel(slog.LevelInfo)
+		}
+	},
 	Long: `Select a session from your bitwarden password manager
 
 Pre-requisites:

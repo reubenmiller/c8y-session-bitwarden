@@ -97,6 +97,7 @@ func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySe
 	}
 
 	if len(item.Fields) > 0 {
+		slog.Debug("Found custom fields", "id", item.ID, "fields", item.Fields)
 		if v, found := GetField(item.Fields, "tenant"); found {
 			out.Tenant = v
 		}
@@ -112,6 +113,8 @@ func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySe
 		if v, found := GetField(item.Fields, "loginType"); found {
 			out.LoginType = v
 		}
+	} else {
+		slog.Debug("No fields found for item")
 	}
 
 	if strings.Contains(item.Login.Username, "/") {
