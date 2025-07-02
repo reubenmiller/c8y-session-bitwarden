@@ -17,6 +17,9 @@ var rootCmd = &cobra.Command{
 		if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
 			slog.SetLogLoggerLevel(slog.LevelInfo)
 		}
+		if debug, _ := cmd.Flags().GetBool("debug"); debug {
+			slog.SetLogLoggerLevel(slog.LevelDebug)
+		}
 	},
 	Long: `Select a session from your bitwarden password manager
 
@@ -41,4 +44,5 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose logging")
+	rootCmd.PersistentFlags().Bool("debug", false, "Debug logging")
 }
