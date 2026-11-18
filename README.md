@@ -1,11 +1,21 @@
 # c8y-session-bitwarden
 
-Set a go-c8y-cli session from bitwarden.
+A [go-c8y-cli](https://goc8ycli.netlify.app) extension which selects a session from your Bitwarden vault.
+
+The extension provides the `bitwarden` session provider, which `set-session` and `c8y sessions login` use to show a list of the Cumulocity sessions stored in Bitwarden. The selected session is passed to go-c8y-cli, including the password and the TOTP code (if the item has a TOTP secret).
 
 ## Install
 
+Requires go-c8y-cli >= [2.57.0](https://github.com/reubenmiller/go-c8y-cli/releases/tag/v2.57.0).
+
 ```sh
-go install github.com/reubenmiller/c8y-session-bitwarden@latest
+c8y extensions install reubenmiller/c8y-session-bitwarden
+```
+
+c8y downloads the binary for your platform from the latest GitHub release and verifies its checksum. Update it with:
+
+```sh
+c8y extensions update session-bitwarden
 ```
 
 ## Setting up Bitwarden
@@ -44,37 +54,59 @@ go install github.com/reubenmiller/c8y-session-bitwarden@latest
 
 ## Using it with go-c8y-cli
 
-**Note**: You need to install go-c8y-cli >= [2.52.0](https://github.com/reubenmiller/go-c8y-cli/releases/tag/v2.52.0) to use these instructions
-
-1. In your shell profile, e.g. `~/.zshrc`, then create the following shell function which you can use to use the bitwarden login.
-
-    **Option 1: Change the set-session**
+1. Select a session from the `c8y` folder of your vault
 
     ```sh
-    eval "$(c8y settings update --shell zsh session.provider.type external )"
-    eval "$(c8y settings update --shell zsh session.provider.command "c8y-session-bitwarden list --folder c8y")"
-    eval "$(c8y settings update --shell zsh session.provider.secrets BW_SESSION)"
+    set-session --from-extension bitwarden
     ```
 
-    If you're using touchie, then you can set the pin-entry setting to use touchie to get the BW_SESSION value from the macOS keychain and authenticate using TouchID
+    Arguments after `--` are passed to the provider, for example to use another folder or to filter the sessions:
+
+    ```sh
+    set-session --from-extension bitwarden -- --folder c8y example.com dev
+    ```
+
+    The provider needs the `BW_SESSION` environment variable. If it is not set, then go-c8y-cli reads it with your pin entry command. If you're using touchie, then set the pin entry command so the value is read from the macOS keychain using TouchID:
 
     ```sh
     eval "$(c8y settings update pinEntry "touchie get" --shell auto)"
     ```
 
-    **Option 2: Add a new set-session helper**
+2. Optional: Use the provider by default, so `set-session` (without arguments) uses Bitwarden
 
     ```sh
-    eval "$(c8y settings update pinEntry "touchie get" --shell auto)"
-    set-session-bitwarden() {
-        eval "$(c8y sessions login --from-cmd "c8y-session-bitwarden list --folder c8y" --secrets BW_SESSION "$@")"
-    }
+    eval "$(c8y settings update --shell auto session.provider.type extension)"
+    eval "$(c8y settings update --shell auto session.provider.extension bitwarden)"
+    ```
+
+You can also run the binary through c8y, for example to see the help:
+
+```sh
+c8y session-bitwarden list --help
 ```
 
-2. Reload your shell
+## Development
 
-3. Activate the session
+Build the binary into the extension folder, then install the folder as a local extension. c8y links to the folder, so you only need to rebuild the binary to see your changes.
 
-    ```sh
-    set-session
-    ```
+```sh
+go build -o bin/c8y-session-bitwarden .
+c8y extensions install .
+c8y extensions validate .
+```
+
+Releases are published by GoReleaser when a `v*` tag is pushed.
+
+## Install without the extension (go-c8y-cli < 2.57.0)
+
+```sh
+go install github.com/reubenmiller/c8y-session-bitwarden@latest
+```
+
+Then use it as an external session provider:
+
+```sh
+eval "$(c8y settings update --shell zsh session.provider.type external)"
+eval "$(c8y settings update --shell zsh session.provider.command "c8y-session-bitwarden list --folder c8y")"
+eval "$(c8y settings update --shell zsh session.provider.secrets BW_SESSION)"
+```

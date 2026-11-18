@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# Builds the release archives which "c8y extensions install reubenmiller/c8y-session-bitwarden" installs.
+# Each archive contains the binary (bin/c8y-session-bitwarden) and the extension files.
+version: 2
+
+project_name: c8y-session-bitwarden
+
+builds:
+  - binary: bin/c8y-session-bitwarden
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - extension.yaml
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github

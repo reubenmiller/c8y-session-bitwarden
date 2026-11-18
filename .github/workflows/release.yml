@@ -1,0 +1,33 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      # Check the extension for problems, e.g. flags which clash with c8y global flags
+      - name: Validate extension
+        run: |
+          go build -o bin/c8y-session-bitwarden .
+          go run github.com/reubenmiller/go-c8y-cli/v2/cmd/c8y@latest extensions validate . --strict
+
+      - uses: goreleaser/goreleaser-action@v7
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

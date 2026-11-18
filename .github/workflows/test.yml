@@ -1,0 +1,21 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        run: go build -o bin/c8y-session-bitwarden .
+
+      - name: Validate extension
+        run: go run github.com/reubenmiller/go-c8y-cli/v2/cmd/c8y@latest extensions validate . --strict

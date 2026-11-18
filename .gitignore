@@ -1,2 +1,4 @@
-c8y-session-bitwarden
+/c8y-session-bitwarden
+bin/
+dist/
 .env

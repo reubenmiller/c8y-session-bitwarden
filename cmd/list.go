@@ -28,6 +28,9 @@ var listCmd = &cobra.Command{
 			* If only 1 match if found, then the session will be selected automatically
 
 		Examples
+			set-session --from-extension bitwarden -- --folder c8y
+			# Select a session using go-c8y-cli (requires the extension to be installed)
+
 			c8y-session-bitwarden list --folder c8y
 			# Select items from the c8y folder
 
@@ -83,9 +86,14 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 	listCmd.Flags().String("folder", "c8y", "Folder")
 
-	// Hidden flags which are only there to satisfy the go-c8y-cli session interface
+	// Hidden flags which are only there to satisfy the go-c8y-cli session provider interface.
+	// go-c8y-cli passes these flags to the provider when they are set by the user
 	listCmd.Flags().String("loginType", "", "Not used. Kept to satisfy the go-c8y-cli session interface")
 	listCmd.Flags().Bool("clear", false, "Not used. Kept to satisfy the go-c8y-cli session interface")
-	listCmd.Flags().MarkHidden("loginType")
-	listCmd.Flags().MarkHidden("clear")
+	listCmd.Flags().String("browserCallback", "", "Not used. Kept to satisfy the go-c8y-cli session interface")
+	listCmd.Flags().String("sso-scopes", "", "Not used. Kept to satisfy the go-c8y-cli session interface")
+	listCmd.Flags().String("sso-audience", "", "Not used. Kept to satisfy the go-c8y-cli session interface")
+	for _, name := range []string{"loginType", "clear", "browserCallback", "sso-scopes", "sso-audience"} {
+		_ = listCmd.Flags().MarkHidden(name)
+	}
 }
