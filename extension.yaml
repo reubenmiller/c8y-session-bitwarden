@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/reubenmiller/go-c8y-cli/v2/tools/schema/extension.json
+version: v1
+
+# Extension name (c8y session-bitwarden)
+name: session-bitwarden
+
+# The binary is mounted at the extension root, so "c8y session-bitwarden list ..." runs
+# "c8y-session-bitwarden list ..."
+binary:
+  path: bin/c8y-session-bitwarden
+  completion: cobra
+
+# Session provider used by "set-session --from-extension bitwarden" and
+# "c8y sessions login --from-extension bitwarden"
+sessionProviders:
+  - name: bitwarden
+    description: Select a session from your Bitwarden vault
+    exec: [list]
+    secrets: [BW_SESSION]
+    format: json
