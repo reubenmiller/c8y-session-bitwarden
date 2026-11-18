@@ -120,7 +120,7 @@ func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySe
 	if strings.Contains(item.Login.Username, "/") {
 		parts := strings.SplitN(item.Login.Username, "/", 2)
 		if len(parts) == 2 {
-			if out.Tenant != "" {
+			if out.Tenant == "" {
 				out.Tenant = parts[0]
 			}
 			out.Username = parts[1]
