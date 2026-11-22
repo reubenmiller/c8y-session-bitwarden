@@ -4,10 +4,11 @@ Copyright © 2024 Reuben Miller
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/MakeNowJust/heredoc/v2"
 	"github.com/reubenmiller/c8y-session-bitwarden/pkg/bitwarden"
 	"github.com/reubenmiller/c8y-session-bitwarden/pkg/core/picker"
-	"github.com/reubenmiller/go-c8y-cli/pkg/extsdk"
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +38,9 @@ var listCmd = &cobra.Command{
 
 			c8y-session-bitwarden list --folder c8y example.com dev
 			# Select items from the c8y folder, and match the search term, "example.com" AND "dev"
+
+			c8y-session-bitwarden list --folder c8y --json
+			# Print the sessions as json (without secrets), e.g. for the session picker of "c8y mcp serve"
 	`),
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -50,6 +54,10 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
+		if asJSON, _ := cmd.Flags().GetBool("json"); asJSON {
+			return printSessionSummaries(cmd.OutOrStdout(), sessions)
+		}
+
 		session, err := picker.Pick(sessions, picker.PickerOptions{
 			AutoSelectIfOnlyOne: true,
 		})
@@ -57,47 +65,19 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
-		// Check if TOTP secret is present and calc next code
+		// The picker only returns a copy of the session without secrets
 		for _, s := range sessions {
 			if session.SessionURI == s.SessionURI {
-				session.Password = s.Password
-				if s.TOTPSecret != "" {
-					totp, toptErr := bitwarden.GetTOTPCodeFromSecret(s.TOTPSecret)
-					if toptErr == nil {
-						session.TOTP = totp
-					}
-					break
-				}
+				return printSession(s)
 			}
 		}
-
-		// Write the selected session to stdout in the go-c8y-cli session format
-		return extsdk.PrintSession(extsdk.Session{
-			Host:        session.Host,
-			Tenant:      session.Tenant,
-			Username:    session.Username,
-			Password:    session.Password,
-			TOTP:        session.TOTP,
-			Mode:        session.Mode,
-			LoginType:   session.LoginType,
-			Description: session.Name,
-			SessionUri:  session.SessionURI,
-		})
+		return fmt.Errorf("the selected session was not found. sessionUri=%s", session.SessionURI)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(listCmd)
 	listCmd.Flags().String("folder", "c8y", "Folder")
-
-	// Hidden flags which are only there to satisfy the go-c8y-cli session provider interface.
-	// go-c8y-cli passes these flags to the provider when they are set by the user
-	listCmd.Flags().String("loginType", "", "Not used. Kept to satisfy the go-c8y-cli session interface")
-	listCmd.Flags().Bool("clear", false, "Not used. Kept to satisfy the go-c8y-cli session interface")
-	listCmd.Flags().String("browserCallback", "", "Not used. Kept to satisfy the go-c8y-cli session interface")
-	listCmd.Flags().String("sso-scopes", "", "Not used. Kept to satisfy the go-c8y-cli session interface")
-	listCmd.Flags().String("sso-audience", "", "Not used. Kept to satisfy the go-c8y-cli session interface")
-	for _, name := range []string{"loginType", "clear", "browserCallback", "sso-scopes", "sso-audience"} {
-		_ = listCmd.Flags().MarkHidden(name)
-	}
+	listCmd.Flags().Bool("json", false, "Print the sessions as a json array (without secrets) instead of selecting one")
+	addSessionInterfaceFlags(listCmd)
 }

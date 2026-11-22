@@ -16,5 +16,9 @@ sessionProviders:
   - name: bitwarden
     description: Select a session from your Bitwarden vault
     exec: [list]
+    # Used by "c8y mcp serve" to show the sessions in its browser session picker, and by
+    # "c8y sessions login --from-extension bitwarden --select <sessionUri>"
+    list: [list, --json]
+    select: [get]
     secrets: [BW_SESSION]
     format: json
