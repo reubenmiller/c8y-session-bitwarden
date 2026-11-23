@@ -91,19 +91,19 @@ Requires a go-c8y-cli version which supports the `list` and `select` commands of
     eval "$(c8y settings update pinEntry "touchie get" --shell auto)"
     ```
 
-2. Register the server with the provider, e.g. for Claude Code
+2. Register the server with the provider, e.g. for Claude Code. The picker then only shows your Bitwarden sessions
 
     ```sh
-    claude mcp add --scope user c8y -- c8y mcp serve --session-provider bitwarden
+    claude mcp add --scope user c8y -- c8y mcp serve --sessionProvider bitwarden
     ```
 
-    Arguments for the provider's list command can be added, for example to use another folder:
+    Add `--sessionProvider file` to also show your session files. The sources are shown in the given order. Arguments for the provider's list command can be added, for example to use another folder:
 
     ```sh
-    claude mcp add --scope user c8y -- c8y mcp serve --session-provider "bitwarden --folder c8y"
+    claude mcp add --scope user c8y -- c8y mcp serve --sessionProvider file --sessionProvider "bitwarden --folder c8y"
     ```
 
-    If you set the provider as the default (`session.provider.type extension` and `session.provider.extension bitwarden`), then `--session-provider` is not needed.
+    If you set the provider as the default (`session.provider.type extension` and `session.provider.extension bitwarden`), then the picker shows your session files and your Bitwarden sessions without `--sessionProvider`.
 
 You can check the sessions which the picker shows, and log in to one without selecting it interactively:
 
