@@ -79,6 +79,39 @@ c8y extensions update session-bitwarden
     eval "$(c8y settings update --shell auto session.provider.extension bitwarden)"
     ```
 
+## Using it with the go-c8y-cli MCP server
+
+`c8y mcp serve` can show your Bitwarden sessions in its browser session picker, next to your session files. Selecting a session logs in to it, and when the token expires, the session (and a new TOTP code) is read from Bitwarden again.
+
+Requires a go-c8y-cli version which supports the `list` and `select` commands of session providers.
+
+1. Make sure the MCP server can read `BW_SESSION`. The server has no terminal, so either set the pin entry command (recommended), or pass the variable in the MCP client configuration
+
+    ```sh
+    eval "$(c8y settings update pinEntry "touchie get" --shell auto)"
+    ```
+
+2. Register the server with the provider, e.g. for Claude Code. The picker then only shows your Bitwarden sessions
+
+    ```sh
+    claude mcp add --scope user c8y -- c8y mcp serve --sessionProvider bitwarden
+    ```
+
+    Add `--sessionProvider file` to also show your session files. The sources are shown in the given order. Arguments for the provider's list command can be added, for example to use another folder:
+
+    ```sh
+    claude mcp add --scope user c8y -- c8y mcp serve --sessionProvider file --sessionProvider "bitwarden --folder c8y"
+    ```
+
+    If you set the provider as the default (`session.provider.type extension` and `session.provider.extension bitwarden`), then the picker shows your session files and your Bitwarden sessions without `--sessionProvider`.
+
+You can check the sessions which the picker shows, and log in to one without selecting it interactively:
+
+```sh
+c8y sessions list --from-extension bitwarden
+eval "$(c8y sessions login --from-extension bitwarden --select bitwarden://<item-id>)"
+```
+
 You can also run the binary through c8y, for example to see the help:
 
 ```sh

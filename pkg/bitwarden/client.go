@@ -1,6 +1,7 @@
 package bitwarden
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -79,7 +80,7 @@ type BWUri struct {
 func mapToSession(item *BWItem, folders map[string]string) *session.CumulocitySession {
 
 	out := &session.CumulocitySession{
-		SessionURI: fmt.Sprintf("bitwarden://%s", item.ID),
+		SessionURI: SessionURIPrefix + item.ID,
 		Name:       item.Name,
 		Username:   item.Login.Username,
 		Password:   item.Login.Password,
@@ -171,24 +172,32 @@ func (c *Client) exec(args []string, data any) error {
 		return fmt.Errorf("bitwarden cli 'BW_SESSION' env variable is not set")
 	}
 
-	bw := exec.Command("bw", args...)
-	stdout, err := bw.StdoutPipe()
-	if err != nil {
-		return err
+	// never let bw prompt (e.g. for the master password), as stdin is not used
+	bw := exec.Command("bw", append([]string{"--nointeraction"}, args...)...)
+	stderr := &bytes.Buffer{}
+	bw.Stderr = stderr
+	output, runErr := bw.Output()
+	if runErr != nil {
+		if reason := lastLine(stderr.String() + "\n" + string(output)); reason != "" {
+			return fmt.Errorf("bw: %s", reason)
+		}
+		return fmt.Errorf("bw: %w", runErr)
 	}
-	err = bw.Start()
-	if err != nil {
-		return err
+	if err := json.Unmarshal(output, data); err != nil {
+		return fmt.Errorf("failed to parse json output. %w", err)
 	}
-	parseErr := json.NewDecoder(stdout).Decode(data)
-	if parseErr != nil {
-		parseErr = fmt.Errorf("failed to parse json output. %w", parseErr)
-	}
+	return nil
+}
 
-	// wait for command to finish in background
-	go bw.Wait()
-
-	return parseErr
+// lastLine returns the last non-empty line of the text
+func lastLine(text string) string {
+	lines := strings.Split(text, "\n")
+	for i := len(lines) - 1; i >= 0; i-- {
+		if line := strings.TrimSpace(lines[i]); line != "" {
+			return line
+		}
+	}
+	return ""
 }
 
 func (c *Client) List(name ...string) ([]*session.CumulocitySession, error) {
@@ -222,7 +231,9 @@ func (c *Client) List(name ...string) ([]*session.CumulocitySession, error) {
 	slog.Debug("Starting", "time", time.Now().Format(time.RFC3339Nano))
 
 	items := make([]BWItem, 0)
-	c.exec(cmdArgs, &items)
+	if err := c.exec(cmdArgs, &items); err != nil {
+		return nil, err
+	}
 
 	sessions := make([]*session.CumulocitySession, 0)
 	for _, item := range items {
@@ -244,6 +255,35 @@ func (c *Client) List(name ...string) ([]*session.CumulocitySession, error) {
 		}
 	}
 	return sessions, nil
+}
+
+// SessionURIPrefix prefix of the sessionUri of the sessions
+const SessionURIPrefix = "bitwarden://"
+
+// ItemID returns the bitwarden item id of a sessionUri (bitwarden://<item-id>). An item id is
+// also accepted
+func ItemID(sessionURI string) (string, error) {
+	id := strings.TrimPrefix(strings.TrimSpace(sessionURI), SessionURIPrefix)
+	if id == "" || strings.Contains(id, "/") {
+		return "", fmt.Errorf("invalid sessionUri %q, expected %s<item-id>", sessionURI, SessionURIPrefix)
+	}
+	return id, nil
+}
+
+// Get returns the session of a bitwarden item, given by its sessionUri (bitwarden://<item-id>)
+func (c *Client) Get(sessionURI string) (*session.CumulocitySession, error) {
+	id, err := ItemID(sessionURI)
+	if err != nil {
+		return nil, err
+	}
+	item := BWItem{}
+	if err := c.exec([]string{"get", "item", id}, &item); err != nil {
+		return nil, fmt.Errorf("could not get the bitwarden item %s. %w", id, err)
+	}
+	if item.ID == "" || item.Skip() {
+		return nil, fmt.Errorf("the bitwarden item %s is not a Cumulocity session (it has no login uri)", id)
+	}
+	return mapToSession(&item, nil), nil
 }
 
 func GetTOTPCode(secret string, t time.Time) (string, error) {
